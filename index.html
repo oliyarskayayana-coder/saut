@@ -1,0 +1,1518 @@
+<!DOCTYPE html>
+<html lang="uk" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DIGITAL HUMAN LAB — Технології створення реалістичних персонажів</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            obsidian: '#0A0B10',
+            surface: '#12151E',
+            surfaceLight: '#1A1E2B',
+            neonCyan: '#00F0FF',
+            neonPurple: '#8B5CF6',
+            neonAmber: '#F59E0B',
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Space Grotesk', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #0A0B10;
+      color: #F3F4F6;
+      overflow-x: hidden;
+    }
+
+    /* Тонка технічна сітка на фоні */
+    .bg-grid-pattern {
+      background-size: 44px 44px;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    }
+
+    /* Glassmorphism панелі */
+    .glass-panel {
+      background: rgba(18, 21, 30, 0.72);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7);
+    }
+
+    .glass-card {
+      background: linear-gradient(145deg, rgba(24, 28, 40, 0.8), rgba(14, 17, 25, 0.9));
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+
+    .glass-card:hover {
+      border-color: rgba(0, 240, 255, 0.4);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 30px -10px rgba(0, 240, 255, 0.18);
+    }
+
+    /* Кастомні повзунки */
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      background: rgba(255, 255, 255, 0.1);
+      height: 6px;
+      border-radius: 999px;
+      outline: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #00F0FF;
+      cursor: pointer;
+      box-shadow: 0 0 12px rgba(0, 240, 255, 0.8);
+      border: 2px solid #0A0B10;
+      transition: transform 0.15s ease;
+    }
+
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+
+    /* Анімація появи секцій */
+    .reveal {
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity 0.7s ease-out, transform 0.7s ease-out;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Світіння тексту */
+    .text-glow-cyan {
+      text-shadow: 0 0 24px rgba(0, 240, 255, 0.45);
+    }
+    .text-glow-purple {
+      text-shadow: 0 0 24px rgba(139, 92, 246, 0.45);
+    }
+  </style>
+</head>
+<body class="bg-obsidian bg-grid-pattern antialiased selection:bg-neonCyan selection:text-obsidian">
+
+  <!-- 1. Навігаційна панель -->
+  <header class="fixed top-0 inset-x-0 z-50 glass-panel border-b border-white/10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <a href="#hero" class="flex items-center gap-2.5 group">
+        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-neonCyan to-neonPurple flex items-center justify-center text-obsidian font-mono font-bold text-sm shadow-[0_0_15px_rgba(0,240,255,0.4)]">
+          DH
+        </div>
+        <span class="font-display font-bold tracking-wider text-base sm:text-lg text-white group-hover:text-neonCyan transition-colors">
+          DIGITAL HUMAN <span class="text-neonCyan font-mono text-xs px-1.5 py-0.5 rounded bg-neonCyan/10 border border-neonCyan/30">LAB</span>
+        </span>
+      </a>
+
+      <!-- Десктоп меню -->
+      <nav class="hidden md:flex items-center gap-7 text-sm font-medium text-gray-300">
+        <a href="#pipeline" class="hover:text-neonCyan transition-colors">Етапи створення</a>
+        <a href="#shader-lab" class="hover:text-neonCyan transition-colors">Шейдери та Реалізм</a>
+        <a href="#technologies" class="hover:text-neonCyan transition-colors">Технології</a>
+        <a href="#evolution" class="hover:text-neonCyan transition-colors">Еволюція графіки</a>
+        <a href="#uncanny-valley" class="hover:text-neonCyan transition-colors">Моторошна долина</a>
+      </nav>
+
+      <!-- Мобільна кнопка -->
+      <button id="mobile-menu-btn" aria-label="Меню" class="md:hidden p-2 rounded-lg text-gray-300 hover:text-white hover:bg-white/5">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Мобільне меню -->
+    <div id="mobile-menu" class="hidden md:hidden glass-panel border-t border-white/10 px-4 pt-3 pb-5 space-y-2.5 text-sm">
+      <a href="#pipeline" class="block py-1.5 text-gray-300 hover:text-neonCyan">Етапи створення</a>
+      <a href="#shader-lab" class="block py-1.5 text-gray-300 hover:text-neonCyan">Шейдери та Реалізм</a>
+      <a href="#technologies" class="block py-1.5 text-gray-300 hover:text-neonCyan">Технології</a>
+      <a href="#evolution" class="block py-1.5 text-gray-300 hover:text-neonCyan">Еволюція графіки</a>
+      <a href="#uncanny-valley" class="block py-1.5 text-gray-300 hover:text-neonCyan">Моторошна долина</a>
+    </div>
+  </header>
+
+  <!-- 2. Головний екран (Hero Section) -->
+  <section id="hero" class="relative pt-24 pb-16 lg:pt-32 lg:pb-24 min-h-screen flex items-center overflow-hidden">
+    <!-- Фонові світлові плями -->
+    <div class="absolute top-1/4 -left-32 w-96 h-96 bg-neonCyan/15 rounded-full blur-[130px] pointer-events-none"></div>
+    <div class="absolute bottom-10 -right-32 w-96 h-96 bg-neonPurple/20 rounded-full blur-[130px] pointer-events-none"></div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center">
+        
+        <!-- Ліва колонка: Заголовок і CTA -->
+        <div class="lg:col-span-6 space-y-6 z-10">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-mono text-neonCyan">
+            <span class="w-2 h-2 rounded-full bg-neonCyan animate-pulse"></span>
+            NEXT-GEN CHARACTER PIPELINE // REAL-TIME RENDER
+          </div>
+
+          <h1 class="font-display text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.12] text-white">
+            Від полігонів до <span class="text-transparent bg-clip-text bg-gradient-to-r from-neonCyan via-blue-400 to-neonPurple text-glow-cyan">живої душі</span>: технології створення цифрових людей
+          </h1>
+
+          <p class="text-gray-400 text-base sm:text-lg leading-relaxed max-w-xl">
+            Досліджуйте інженерну магію сучасних відеоігор: як 3D-сканування, підповерхневе розсіювання світла, фізика волосся та захоплення руху перетворюють математичні сітки на фотореалістичних героїв.
+          </p>
+
+          <div class="flex flex-wrap items-center gap-4 pt-2">
+            <a href="#shader-lab" class="px-6 py-3.5 rounded-xl bg-neonCyan text-obsidian font-display font-bold text-sm tracking-wide hover:bg-cyan-300 transition-all shadow-[0_0_25px_rgba(0,240,255,0.45)] flex items-center gap-2">
+              <span>Запустити симулятор</span>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+            </a>
+            <a href="#pipeline" class="px-6 py-3.5 rounded-xl glass-panel text-white font-medium text-sm hover:border-white/25 transition-all">
+              Вивчити Pipeline
+            </a>
+          </div>
+
+          <!-- Ключові метрики індустрії -->
+          <div class="grid grid-cols-3 gap-4 pt-6 border-t border-white/10">
+            <div>
+              <div class="font-mono text-xl sm:text-2xl font-bold text-white">120K+</div>
+              <div class="text-xs text-gray-400 mt-0.5">Полігонів на обличчя</div>
+            </div>
+            <div>
+              <div class="font-mono text-xl sm:text-2xl font-bold text-neonCyan">8K PBR</div>
+              <div class="text-xs text-gray-400 mt-0.5">Мікрорельєф пор шкіри</div>
+            </div>
+            <div>
+              <div class="font-mono text-xl sm:text-2xl font-bold text-neonPurple">100K+</div>
+              <div class="text-xs text-gray-400 mt-0.5">Фізичних пасм волосся</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Права колонка: Інтерактивна 3D сітка голови (Canvas) -->
+        <div class="lg:col-span-6 relative">
+          <div class="glass-panel rounded-2xl p-3 sm:p-4 relative overflow-hidden border border-neonCyan/20">
+            <!-- Верхній HUD -->
+            <div class="flex items-center justify-between text-[11px] font-mono text-gray-400 mb-2 px-1">
+              <span class="flex items-center gap-1.5 text-neonCyan">
+                <span class="w-1.5 h-1.5 rounded-full bg-neonCyan"></span>
+                FACIAL_TRACKING_MESH.OBJ
+              </span>
+              <span id="hero-coords">ROT: 0.0° / 0.0°</span>
+            </div>
+
+            <div class="relative rounded-xl overflow-hidden bg-[#07080C] border border-white/5 aspect-[4/3] flex items-center justify-center">
+              <canvas id="hero-canvas" class="w-full h-full block cursor-crosshair"></canvas>
+              <div class="absolute bottom-3 left-3 right-3 flex items-center justify-between pointer-events-none text-[11px] font-mono text-gray-400 bg-obsidian/80 backdrop-blur px-3 py-1.5 rounded-lg border border-white/10">
+                <span>Наведіть курсор для керування поглядом та сіткою</span>
+                <span class="text-neonAmber">60 FPS</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. Інтерактивний Pipeline (Етапи виробництва) -->
+  <section id="pipeline" class="py-20 lg:py-28 relative reveal">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="max-w-3xl mb-12">
+        <div class="font-mono text-xs text-neonCyan tracking-widest uppercase mb-2">// 01. PRODUCTION PIPELINE</div>
+        <h2 class="font-display text-3xl sm:text-4xl font-bold text-white">5 етапів народження цифрового персонажа</h2>
+        <p class="text-gray-400 mt-3 text-base">Натискайте на кроки виробництва нижче, щоб побачити інженерні процеси, програмні пакети та технічні параметри кожного етапу.</p>
+      </div>
+
+      <!-- Кнопки кроків -->
+      <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-8" id="pipeline-tabs">
+        <!-- Генерується JS -->
+      </div>
+
+      <!-- Панель деталей активного етапу -->
+      <div class="glass-panel rounded-2xl p-6 sm:p-8 lg:p-10 border border-white/10">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center" id="pipeline-content">
+          <!-- Контент оновлюється динамічно -->
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. Інтерактивний симулятор «Шейдери та Реалізм» -->
+  <section id="shader-lab" class="py-20 lg:py-28 relative reveal">
+    <div class="absolute inset-x-0 top-1/2 -translate-y-1/2 h-96 bg-neonPurple/10 blur-[140px] pointer-events-none"></div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <div class="max-w-3xl mb-12">
+        <div class="font-mono text-xs text-neonPurple tracking-widest uppercase mb-2">// 02. INTERACTIVE SHADER VIEWPORT</div>
+        <h2 class="font-display text-3xl sm:text-4xl font-bold text-white">Лабораторія шейдерів та світла</h2>
+        <p class="text-gray-400 mt-3 text-base">Перемикайте режими візуалізації в реальному часі, щоб побачити, як «гола» полігональна сітка перетворюється на живу шкіру завдяки Subsurface Scattering та PBR-матеріалам.</p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+        <!-- Вікно рендерингу -->
+        <div class="lg:col-span-7 glass-panel rounded-2xl p-4 flex flex-col justify-between border border-white/10">
+          <div class="flex flex-wrap items-center justify-between gap-2 pb-3 mb-3 border-b border-white/10 font-mono text-xs">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-red-500/80"></span>
+              <span class="w-2.5 h-2.5 rounded-full bg-amber-400/80"></span>
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-400/80"></span>
+              <span class="text-gray-400 ml-2">VIEWPORT // <span id="active-shader-label" class="text-neonCyan font-bold">FINAL PBR + RAY TRACING</span></span>
+            </div>
+            <span class="text-gray-500">RES: 1024×1024</span>
+          </div>
+
+          <div class="relative rounded-xl overflow-hidden bg-[#06070A] border border-white/5 aspect-square sm:aspect-[4/3] flex items-center justify-center">
+            <canvas id="shader-canvas" class="w-full h-full block"></canvas>
+            <!-- Легенда поверх рендера -->
+            <div id="shader-badge" class="absolute top-3 left-3 px-3 py-1.5 rounded-lg bg-obsidian/85 backdrop-blur border border-white/10 text-xs font-mono text-gray-200">
+              Режим: Фінальний рендер з розсіюванням світла
+            </div>
+          </div>
+        </div>
+
+        <!-- Панель керування -->
+        <div class="lg:col-span-5 glass-panel rounded-2xl p-6 sm:p-8 flex flex-col justify-between space-y-6">
+          <div class="space-y-4">
+            <h3 class="font-display text-xl font-bold text-white">Режим візуалізації (Render Pass)</h3>
+            <div class="grid grid-cols-1 gap-2.5" id="shader-modes">
+              <button data-mode="wireframe" class="shader-mode-btn text-left p-3.5 rounded-xl border border-white/10 bg-white/5 hover:border-neonCyan/50 transition-all">
+                <div class="flex items-center justify-between">
+                  <span class="font-mono text-sm font-bold text-white">01. Wireframe (Полігональна сітка)</span>
+                  <span class="text-xs font-mono text-neonCyan">TOPOLOGY</span>
+                </div>
+                <p class="text-xs text-gray-400 mt-1">Каркас із трикутників та квадів, що визначає геометрію обличчя.</p>
+              </button>
+
+              <button data-mode="clay" class="shader-mode-btn text-left p-3.5 rounded-xl border border-white/10 bg-white/5 hover:border-neonCyan/50 transition-all">
+                <div class="flex items-center justify-between">
+                  <span class="font-mono text-sm font-bold text-white">02. Clay Sculpt (Глиняний рендер)</span>
+                  <span class="text-xs font-mono text-gray-300">NORMALS</span>
+                </div>
+                <p class="text-xs text-gray-400 mt-1">Матова модель без кольору — перевірка анатомії, складок і нормалей.</p>
+              </button>
+
+              <button data-mode="sss" class="shader-mode-btn text-left p-3.5 rounded-xl border border-white/10 bg-white/5 hover:border-neonCyan/50 transition-all">
+                <div class="flex items-center justify-between">
+                  <span class="font-mono text-sm font-bold text-white">03. Subsurface Scattering (SSS)</span>
+                  <span class="text-xs font-mono text-neonAmber">TRANSLUCENCY</span>
+                </div>
+                <p class="text-xs text-gray-400 mt-1">Проникнення світла під шкіру (вуха, ніс, губи) для усунення «пластикового» ефекту.</p>
+              </button>
+
+              <button data-mode="pbr" class="shader-mode-btn active text-left p-3.5 rounded-xl border border-neonCyan bg-neonCyan/10 transition-all">
+                <div class="flex items-center justify-between">
+                  <span class="font-mono text-sm font-bold text-neonCyan">04. Final PBR + Ray Tracing</span>
+                  <span class="text-xs font-mono text-neonPurple">PHOTOREAL</span>
+                </div>
+                <p class="text-xs text-gray-300 mt-1">Поєднання Albedo, мікропор, жирного блиску (Roughness) та живих очей.</p>
+              </button>
+            </div>
+          </div>
+
+          <!-- Повзунки параметрів -->
+          <div class="space-y-5 pt-4 border-t border-white/10">
+            <div>
+              <div class="flex justify-between text-xs font-mono mb-2">
+                <span class="text-gray-300">КУТ ДЖЕРЕЛА СВІТЛА (KEY LIGHT)</span>
+                <span id="light-angle-val" class="text-neonCyan font-bold">35°</span>
+              </div>
+              <input type="range" id="light-angle" min="-80" max="80" value="35" class="w-full" />
+            </div>
+
+            <div>
+              <div class="flex justify-between text-xs font-mono mb-2">
+                <span class="text-gray-300">ДЕТАЛІЗАЦІЯ ПОР ШКІРИ (MICRO-NORMAL)</span>
+                <span id="pore-detail-val" class="text-neonPurple font-bold">85%</span>
+              </div>
+              <input type="range" id="pore-detail" min="0" max="100" value="85" class="w-full" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. Ключові технології індустрії -->
+  <section id="technologies" class="py-20 lg:py-28 relative reveal">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="max-w-3xl mb-12">
+        <div class="font-mono text-xs text-neonCyan tracking-widest uppercase mb-2">// 03. CORE TECH STACK</div>
+        <h2 class="font-display text-3xl sm:text-4xl font-bold text-white">Ключові технології сучасної індустрії</h2>
+        <p class="text-gray-400 mt-3 text-base">Шість стовпів фотореалізму, які дозволяють ігровим рушіям промальовувати десятки мільйонів деталей 60 разів на секунду.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Картка 1 -->
+        <div class="glass-card rounded-2xl p-6 flex flex-col justify-between">
+          <div>
+            <div class="w-12 h-12 rounded-xl bg-neonCyan/10 border border-neonCyan/30 flex items-center justify-center text-neonCyan mb-5">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            </div>
+            <h3 class="font-display text-xl font-bold text-white mb-2">4D-сканування та Фотограмметрія</h3>
+            <p class="text-sm text-gray-400 leading-relaxed">
+              Масив із 100+ синхронізованих камер (Light Stage) фіксує обличчя актора під різними кутами освітлення та у динаміці міміки, створюючи карти мікрозморшок з точністю до 0.05 мм.
+            </p>
+          </div>
+          <div class="mt-6 pt-4 border-t border-white/10 flex items-center justify-between text-xs font-mono text-gray-400">
+            <span>Стек: RealityCapture / Light Stage</span>
+            <span class="text-neonCyan">0.05mm</span>
+          </div>
+        </div>
+
+        <!-- Картка 2 -->
+        <div class="glass-card rounded-2xl p-6 flex flex-col justify-between">
+          <div>
+            <div class="w-12 h-12 rounded-xl bg-neonPurple/10 border border-neonPurple/30 flex items-center justify-center text-neonPurple mb-5">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+            <h3 class="font-display text-xl font-bold text-white mb-2">MetaHuman та FACS-ригінг</h3>
+            <p class="text-sm text-gray-400 leading-relaxed">
+              Система кодування лицьових рухів (FACS) розбиває міміку на анатомічні групи м'язів (Blendshapes). Це гарантує природний рух щік, повік і губ без спотворення геометрії.
+            </p>
+          </div>
+          <div class="mt-6 pt-4 border-t border-white/10 flex items-center justify-between text-xs font-mono text-gray-400">
+            <span>Стек: Unreal MetaHuman / Maya</span>
+            <span class="text-neonPurple">800+ Shapes</span>
+          </div>
+        </div>
+
+        <!-- Картка 3 -->
+        <div class="glass-card rounded-2xl p-6 flex flex-col justify-between">
+          <div>
+            <div class="w-12 h-12 rounded-xl bg-neonAmber/10 border border-neonAmber/30 flex items-center justify-center text-neonAmber mb-5">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+            </div>
+            <h3 class="font-display text-xl font-bold text-white mb-2">Subsurface Scattering (SSS)</h3>
+            <p class="text-sm text-gray-400 leading-relaxed">
+              Шкіра людини напівпрозора: фотони проникають у дерму, розсіюються кровоносними судинами й виходять назовні теплим червоним відтінком. Без SSS обличчя виглядає як пластик.
+            </p>
+          </div>
+          <div class="mt-6 pt-4 border-t border-white/10 flex items-center justify-between text-xs font-mono text-gray-400">
+            <span>Стек: Separable SSS / Burley</span>
+            <span class="text-neonAmber">REALISM KEY</span>
+          </div>
+        </div>
+
+        <!-- Картка 4 -->
+        <div class="glass-card rounded-2xl p-6 flex flex-col justify-between">
+          <div>
+            <div class="w-12 h-12 rounded-xl bg-neonCyan/10 border border-neonCyan/30 flex items-center justify-center text-neonCyan mb-5">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            </div>
+            <h3 class="font-display text-xl font-bold text-white mb-2">Strand-based Hair & Cloth Physics</h3>
+            <p class="text-sm text-gray-400 leading-relaxed">
+              Замість плоских полігональних «карток» волосся тепер симулюється як десятки тисяч окремих волосин із власним заломленням світла (Marschner shader) та колізіями з одягом.
+            </p>
+          </div>
+          <div class="mt-6 pt-4 border-t border-white/10 flex items-center justify-between text-xs font-mono text-gray-400">
+            <span>Стек: Groom / Chaos Cloth</span>
+            <span class="text-neonCyan">100K Strands</span>
+          </div>
+        </div>
+
+        <!-- Картка 5 -->
+        <div class="glass-card rounded-2xl p-6 flex flex-col justify-between">
+          <div>
+            <div class="w-12 h-12 rounded-xl bg-neonPurple/10 border border-neonPurple/30 flex items-center justify-center text-neonPurple mb-5">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+            </div>
+            <h3 class="font-display text-xl font-bold text-white mb-2">Performance Capture (MoCap)</h3>
+            <p class="text-sm text-gray-400 leading-relaxed">
+              Оптичні маркери на костюмі, шоломні камери (HMC) для обличчя та трекінг зіниць дозволяють одночасно записувати рухи тіла, голос і найтонші мікроемоції актора.
+            </p>
+          </div>
+          <div class="mt-6 pt-4 border-t border-white/10 flex items-center justify-between text-xs font-mono text-gray-400">
+            <span>Стек: Vicon / Faceware / LiveLink</span>
+            <span class="text-neonPurple">120-240 Hz</span>
+          </div>
+        </div>
+
+        <!-- Картка 6 -->
+        <div class="glass-card rounded-2xl p-6 flex flex-col justify-between">
+          <div>
+            <div class="w-12 h-12 rounded-xl bg-neonAmber/10 border border-neonAmber/30 flex items-center justify-center text-neonAmber mb-5">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+            </div>
+            <h3 class="font-display text-xl font-bold text-white mb-2">AI-анімація та Neural Rendering</h3>
+            <p class="text-sm text-gray-400 leading-relaxed">
+              Нейромережі генерують реалістичну артикуляцію губ під будь-яку мову озвучення (Audio2Face), а також оптимізують деформацію м'язів у реальному часі без навантаження на CPU.
+            </p>
+          </div>
+          <div class="mt-6 pt-4 border-t border-white/10 flex items-center justify-between text-xs font-mono text-gray-400">
+            <span>Стек: Audio2Face / ML Deformer</span>
+            <span class="text-neonAmber">AI DRIVEN</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. Порівняння епох графіки (2004 vs 2015 vs 2026) -->
+  <section id="evolution" class="py-20 lg:py-28 relative reveal">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="max-w-3xl mb-12">
+        <div class="font-mono text-xs text-neonAmber tracking-widest uppercase mb-2">// 04. GRAPHICS EVOLUTION</div>
+        <h2 class="font-display text-3xl sm:text-4xl font-bold text-white">Еволюція деталізації: 2004 → 2015 → 2026</h2>
+        <p class="text-gray-400 mt-3 text-base">Перемикайте епохи, щоб побачити стрибок у кількості полігонів, роздільній здатності текстур та методах освітлення обличчя.</p>
+      </div>
+
+      <div class="glass-panel rounded-2xl p-6 sm:p-8 border border-white/10">
+        <!-- Перемикач років -->
+        <div class="flex flex-wrap gap-3 mb-8" id="era-buttons">
+          <button data-era="2004" class="era-btn px-5 py-2.5 rounded-xl font-mono text-sm font-bold border border-white/15 bg-white/5 text-gray-300 hover:border-neonCyan/50 transition-all">
+            2004 // Епоха DirectX 9
+          </button>
+          <button data-era="2015" class="era-btn px-5 py-2.5 rounded-xl font-mono text-sm font-bold border border-white/15 bg-white/5 text-gray-300 hover:border-neonCyan/50 transition-all">
+            2015 // Епоха PBR та MoCap
+          </button>
+          <button data-era="2026" class="era-btn active px-5 py-2.5 rounded-xl font-mono text-sm font-bold border border-neonCyan bg-neonCyan/15 text-neonCyan transition-all">
+            2026 // Епоха Path Tracing та Nanite
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          <!-- Візуальне порівняння на Canvas -->
+          <div class="lg:col-span-5">
+            <div class="rounded-xl overflow-hidden bg-[#06070A] border border-white/10 aspect-square relative flex items-center justify-center">
+              <canvas id="era-canvas" class="w-full h-full block"></canvas>
+              <div id="era-badge" class="absolute bottom-3 left-3 px-3 py-1 rounded bg-obsidian/85 border border-white/10 font-mono text-xs text-neonCyan">
+                2026 // 150,000+ TRIS
+              </div>
+            </div>
+          </div>
+
+          <!-- Технічні характеристики епохи -->
+          <div class="lg:col-span-7 space-y-6" id="era-details">
+            <!-- Заповнюється JS -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. «Моторошна долина» (Uncanny Valley) -->
+  <section id="uncanny-valley" class="py-20 lg:py-28 relative reveal">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+        
+        <div class="lg:col-span-5 space-y-5">
+          <div class="font-mono text-xs text-neonCyan tracking-widest uppercase">// 05. PSYCHOLOGY OF REALISM</div>
+          <h2 class="font-display text-3xl sm:text-4xl font-bold text-white">Феномен «Моторошної долини»</h2>
+          <p class="text-gray-400 text-base leading-relaxed">
+            Гіпотеза японського робототехніка Масахіро Морі стверджує: чим більше персонаж схожий на людину, тим сильнішу емпатію він викликає — аж до певної межі. Коли модель стає <em>майже</em> ідеальною, але має мікроскопічні помилки (скляний погляд, неприродна затримка губ), мозок сприймає її з підсвідомою відразою.
+          </p>
+
+          <div class="glass-panel rounded-xl p-5 border-l-4 border-neonAmber space-y-2">
+            <div class="font-mono text-xs text-neonAmber font-bold">ЯК РОЗРОБНИКИ ДОЛАЮТЬ ПРОВАЛ:</div>
+            <ul class="text-sm text-gray-300 space-y-1.5 list-disc list-inside">
+              <li>Мікросакади очей (постійні дрібні рухи зіниць)</li>
+              <li>Вологість слізного меніска та відблиски рогівки</li>
+              <li>Асиметрія міміки (живі люди ніколи не посміхаються симетрично)</li>
+              <li>Кровотік (почервоніння щік під час напруги)</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Інтерактивний SVG-графік -->
+        <div class="lg:col-span-7 glass-panel rounded-2xl p-6 sm:p-8 border border-white/10">
+          <div class="flex items-center justify-between mb-4">
+            <span class="font-mono text-xs text-gray-400">ІНТЕРАКТИВНИЙ ГРАФІК // НАТИСНІТЬ НА ТОЧКИ</span>
+            <span id="valley-point-title" class="font-mono text-xs font-bold text-neonCyan">Фотореалістичний Digital Human</span>
+          </div>
+
+          <div class="w-full overflow-x-auto">
+            <svg viewBox="0 0 600 320" class="w-full h-auto select-none">
+              <!-- Сітка -->
+              <line x1="60" y1="160" x2="570" y2="160" stroke="rgba(255,255,255,0.15)" stroke-dasharray="4 4" />
+              <line x1="60" y1="30" x2="60" y2="290" stroke="rgba(255,255,255,0.25)" stroke-width="1.5" />
+              <line x1="60" y1="290" x2="570" y2="290" stroke="rgba(255,255,255,0.25)" stroke-width="1.5" />
+
+              <!-- Підписи осей -->
+              <text x="15" y="45" fill="#9CA3AF" font-size="11" font-family="JetBrains Mono">+ Емпатія</text>
+              <text x="15" y="164" fill="#6B7280" font-size="11" font-family="JetBrains Mono">0</text>
+              <text x="15" y="280" fill="#EF4444" font-size="11" font-family="JetBrains Mono">- Відраза</text>
+              <text x="380" y="312" fill="#9CA3AF" font-size="11" font-family="JetBrains Mono">Схожість на людину →</text>
+
+              <!-- Зона Моторошної долини -->
+              <rect x="355" y="30" width="115" height="260" fill="rgba(239, 68, 68, 0.08)" />
+              <text x="412" y="50" text-anchor="middle" fill="#F87171" font-size="10" font-family="JetBrains Mono">МОТОРОШНА</text>
+              <text x="412" y="63" text-anchor="middle" fill="#F87171" font-size="10" font-family="JetBrains Mono">ДОЛИНА</text>
+
+              <!-- Крива графіка -->
+              <path d="M 60 160 C 130 155, 170 95, 230 85 C 285 75, 325 65, 355 110 C 385 155, 395 265, 420 265 C 445 265, 460 110, 495 65 C 515 40, 540 38, 560 38" 
+                    fill="none" stroke="url(#valleyGrad)" stroke-width="4" stroke-linecap="round" />
+
+              <defs>
+                <linearGradient id="valleyGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#00F0FF" />
+                  <stop offset="65%" stop-color="#EF4444" />
+                  <stop offset="100%" stop-color="#8B5CF6" />
+                </linearGradient>
+              </defs>
+
+              <!-- Інтерактивні точки -->
+              <g class="valley-node cursor-pointer" data-idx="0">
+                <circle cx="125" cy="145" r="8" fill="#0A0B10" stroke="#00F0FF" stroke-width="3" />
+                <text x="125" y="130" text-anchor="middle" fill="#E5E7EB" font-size="11" font-family="Inter">Стилізація</text>
+              </g>
+
+              <g class="valley-node cursor-pointer" data-idx="1">
+                <circle cx="265" cy="78" r="8" fill="#0A0B10" stroke="#00F0FF" stroke-width="3" />
+                <text x="265" y="62" text-anchor="middle" fill="#E5E7EB" font-size="11" font-family="Inter">Pixar / Fortnite</text>
+              </g>
+
+              <g class="valley-node cursor-pointer" data-idx="2">
+                <circle cx="420" cy="265" r="9" fill="#EF4444" stroke="#FFF" stroke-width="2" />
+                <text x="420" y="284" text-anchor="middle" fill="#FCA5A5" font-size="11" font-weight="bold" font-family="Inter">Ранній CGI / «Мертві очі»</text>
+              </g>
+
+              <g class="valley-node cursor-pointer" data-idx="3">
+                <circle cx="525" cy="42" r="9" fill="#8B5CF6" stroke="#00F0FF" stroke-width="3" />
+                <text x="515" y="25" text-anchor="middle" fill="#00F0FF" font-size="11" font-weight="bold" font-family="Inter">Next-Gen AAA</text>
+              </g>
+            </svg>
+          </div>
+
+          <div id="valley-description" class="mt-4 p-4 rounded-xl bg-white/5 border border-white/10 text-sm text-gray-300">
+            <strong class="text-neonCyan">Next-Gen AAA (Hellblade II, Death Stranding 2):</strong> Повне подолання моторошної долини завдяки 4D-скануванню акторів, фізиці вологих очей та мікроанімаціям шкіри.
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- 8. Підвал та швидка перевірка знань -->
+  <footer class="border-t border-white/10 bg-[#07080C] pt-16 pb-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <!-- Міні-вікторина -->
+      <div class="glass-panel rounded-2xl p-6 sm:p-8 mb-14 border border-neonCyan/20">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div class="space-y-1.5">
+            <span class="font-mono text-xs text-neonCyan uppercase">// QUICK KNOWLEDGE CHECK</span>
+            <h3 class="font-display text-xl font-bold text-white">Яка технологія прибирає «пластиковий» вигляд шкіри, імітуючи проникнення світла всередину тканин?</h3>
+          </div>
+          <div class="flex flex-wrap gap-2.5" id="quiz-options">
+            <button data-correct="false" class="quiz-btn px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm font-mono hover:border-white/30 transition-all">
+              Ambient Occlusion
+            </button>
+            <button data-correct="true" class="quiz-btn px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm font-mono hover:border-white/30 transition-all">
+              Subsurface Scattering (SSS)
+            </button>
+            <button data-correct="false" class="quiz-btn px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm font-mono hover:border-white/30 transition-all">
+              Backface Culling
+            </button>
+          </div>
+        </div>
+        <div id="quiz-feedback" class="hidden mt-4 text-sm font-medium"></div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-500 font-mono">
+        <div class="flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-neonCyan"></span>
+          <span>DIGITAL HUMAN LAB © 2026 — Інтерактивний освітній проєкт про ігрову графіку</span>
+        </div>
+        <div class="flex items-center gap-6">
+          <a href="#hero" class="hover:text-neonCyan transition-colors">На початок ↑</a>
+          <a href="#shader-lab" class="hover:text-neonCyan transition-colors">Симулятор</a>
+          <a href="#pipeline" class="hover:text-neonCyan transition-colors">Pipeline</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- JAVASCRIPT ЛОГІКА -->
+  <script>
+    // ==========================================
+    // 1. МОБІЛЬНЕ МЕНЮ ТА SCROLL REVEAL
+    // ==========================================
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    const mobileMenu = document.getElementById('mobile-menu');
+    mobileMenuBtn.addEventListener('click', () => {
+      mobileMenu.classList.toggle('hidden');
+    });
+
+    // Закриття меню при кліку на посилання
+    mobileMenu.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => mobileMenu.classList.add('hidden'));
+    });
+
+    // Анімація появи при скролі
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.12 });
+
+    document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+    // ==========================================
+    // 2. HERO CANVAS: ІНТЕРАКТИВНА 3D-СІТКА ОБЛИЧЧЯ
+    // ==========================================
+    const heroCanvas = document.getElementById('hero-canvas');
+    const heroCtx = heroCanvas.getContext('2d');
+    const heroCoordsEl = document.getElementById('hero-coords');
+
+    let mouseX = 0, mouseY = 0;
+    let targetRotX = 0, targetRotY = 0;
+    let currentRotX = 0, currentRotY = 0;
+
+    function resizeHeroCanvas() {
+      const rect = heroCanvas.parentElement.getBoundingClientRect();
+      heroCanvas.width = rect.width * window.devicePixelRatio;
+      heroCanvas.height = rect.height * window.devicePixelRatio;
+      heroCtx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    }
+    window.addEventListener('resize', resizeHeroCanvas);
+    resizeHeroCanvas();
+
+    heroCanvas.addEventListener('mousemove', (e) => {
+      const rect = heroCanvas.getBoundingClientRect();
+      const nx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      const ny = ((e.clientY - rect.top) / rect.height) * 2 - 1;
+      targetRotY = nx * 0.55;
+      targetRotX = -ny * 0.35;
+    });
+
+    heroCanvas.addEventListener('mouseleave', () => {
+      targetRotX = 0;
+      targetRotY = 0;
+    });
+
+    // Генерація 3D точок анатомічної маски голови
+    const headVertices = [];
+    const headEdges = [];
+    const rows = 18;
+    const cols = 22;
+
+    for (let i = 0; i <= rows; i++) {
+      const v = i / rows; // 0 (верх) -> 1 (підборіддя)
+      const phi = (v - 0.5) * Math.PI * 0.92;
+      for (let j = 0; j <= cols; j++) {
+        const u = j / cols; // 0 (ліво) -> 1 (право)
+        const theta = (u - 0.5) * Math.PI * 1.15;
+
+        // Базовий еліпсоїд голови
+        let x = Math.sin(theta) * Math.cos(phi) * 115;
+        let y = Math.sin(phi) * 145;
+        let z = Math.cos(theta) * Math.cos(phi) * 115;
+
+        // Звуження до підборіддя
+        if (v > 0.55) {
+          const chinFactor = (v - 0.55) / 0.45;
+          x *= (1 - chinFactor * 0.38);
+          z *= (1 - chinFactor * 0.15);
+        }
+
+        // Рельєф носа
+        const distFromNose = Math.hypot((u - 0.5) * 4.5, (v - 0.53) * 4.0);
+        if (distFromNose < 1.0) {
+          z += Math.cos(distFromNose * Math.PI * 0.5) * 28;
+        }
+
+        // Очні западини
+        const leftEyeDist = Math.hypot((u - 0.36) * 6, (v - 0.42) * 7);
+        const rightEyeDist = Math.hypot((u - 0.64) * 6, (v - 0.42) * 7);
+        if (leftEyeDist < 1) z -= Math.cos(leftEyeDist * Math.PI * 0.5) * 12;
+        if (rightEyeDist < 1) z -= Math.cos(rightEyeDist * Math.PI * 0.5) * 12;
+
+        // Губи
+        const mouthDist = Math.hypot((u - 0.5) * 4.2, (v - 0.72) * 9);
+        if (mouthDist < 1) {
+          z += Math.cos(mouthDist * Math.PI * 0.5) * 11;
+        }
+
+        // Вилиці
+        const cheekL = Math.hypot((u - 0.3) * 5, (v - 0.55) * 5);
+        const cheekR = Math.hypot((u - 0.7) * 5, (v - 0.55) * 5);
+        if (cheekL < 1) z += Math.cos(cheekL * Math.PI * 0.5) * 8;
+        if (cheekR < 1) z += Math.cos(cheekR * Math.PI * 0.5) * 8;
+
+        const isLandmark = (
+          (Math.abs(u - 0.36) < 0.03 && Math.abs(v - 0.42) < 0.03) ||
+          (Math.abs(u - 0.64) < 0.03 && Math.abs(v - 0.42) < 0.03) ||
+          (Math.abs(u - 0.5) < 0.03 && Math.abs(v - 0.55) < 0.03) ||
+          (Math.abs(u - 0.5) < 0.03 && Math.abs(v - 0.72) < 0.03) ||
+          (Math.abs(u - 0.3) < 0.03 && Math.abs(v - 0.56) < 0.03) ||
+          (Math.abs(u - 0.7) < 0.03 && Math.abs(v - 0.56) < 0.03)
+        );
+
+        headVertices.push({ x, y, z, isLandmark });
+      }
+    }
+
+    const stride = cols + 1;
+    for (let i = 0; i < rows; i++) {
+      for (let j = 0; j < cols; j++) {
+        const a = i * stride + j;
+        const b = a + 1;
+        const c = (i + 1) * stride + j;
+        headEdges.push([a, b], [a, c]);
+      }
+    }
+
+    let time = 0;
+    function animateHero() {
+      time += 0.015;
+      const w = heroCanvas.width / window.devicePixelRatio;
+      const h = heroCanvas.height / window.devicePixelRatio;
+
+      heroCtx.clearRect(0, 0, w, h);
+
+      // Плавна інтерполяція обертання + легке автоколивання
+      const autoY = Math.sin(time * 0.7) * 0.14;
+      const autoX = Math.cos(time * 0.5) * 0.06;
+      currentRotY += ((targetRotY + autoY) - currentRotY) * 0.08;
+      currentRotX += ((targetRotX + autoX) - currentRotX) * 0.08;
+
+      if (heroCoordsEl) {
+        const degY = (currentRotY * 57.3).toFixed(1);
+        const degX = (currentRotX * 57.3).toFixed(1);
+        heroCoordsEl.textContent = `ROT: ${degX}° / ${degY}°`;
+      }
+
+      // Фонове радіальне світіння
+      const grad = heroCtx.createRadialGradient(w / 2, h / 2, 10, w / 2, h / 2, w * 0.45);
+      grad.addColorStop(0, 'rgba(0, 240, 255, 0.12)');
+      grad.addColorStop(0.6, 'rgba(139, 92, 246, 0.05)');
+      grad.addColorStop(1, 'rgba(7, 8, 12, 0)');
+      heroCtx.fillStyle = grad;
+      heroCtx.fillRect(0, 0, w, h);
+
+      // Скануюча лазерна лінія
+      const scanY = (Math.sin(time * 1.4) * 0.5 + 0.5) * h;
+      heroCtx.strokeStyle = 'rgba(0, 240, 255, 0.25)';
+      heroCtx.lineWidth = 1;
+      heroCtx.beginPath();
+      heroCtx.moveTo(0, scanY);
+      heroCtx.lineTo(w, scanY);
+      heroCtx.stroke();
+
+      // Проєкція 3D -> 2D
+      const cosY = Math.cos(currentRotY), sinY = Math.sin(currentRotY);
+      const cosX = Math.cos(currentRotX), sinX = Math.sin(currentRotX);
+      const scaleFactor = Math.min(w, h) / 360;
+
+      const projected = headVertices.map(v => {
+        // Обертання навколо Y
+        let x1 = v.x * cosY - v.z * sinY;
+        let z1 = v.z * cosY + v.x * sinY;
+        // Обертання навколо X
+        let y2 = v.y * cosX - z1 * sinX;
+        let z2 = z1 * cosX + v.y * sinX;
+
+        const fov = 420;
+        const persp = fov / (fov + z2 + 120);
+        return {
+          px: w / 2 + x1 * persp * scaleFactor,
+          py: h / 2 + y2 * persp * scaleFactor,
+          z: z2,
+          isLandmark: v.isLandmark
+        };
+      });
+
+      // Малювання ребер сітки
+      heroCtx.lineWidth = 0.85;
+      for (const [i1, i2] of headEdges) {
+        const p1 = projected[i1];
+        const p2 = projected[i2];
+        const depthAlpha = Math.max(0.06, Math.min(0.45, (p1.z + 120) / 260));
+        heroCtx.strokeStyle = `rgba(0, 240, 255, ${depthAlpha})`;
+        heroCtx.beginPath();
+        heroCtx.moveTo(p1.px, p1.py);
+        heroCtx.lineTo(p2.px, p2.py);
+        heroCtx.stroke();
+      }
+
+      // Малювання точок мімічного трекінгу (Landmarks)
+      for (const p of projected) {
+        if (p.isLandmark && p.z > -20) {
+          heroCtx.fillStyle = '#F59E0B';
+          heroCtx.beginPath();
+          heroCtx.arc(p.px, p.py, 3.2, 0, Math.PI * 2);
+          heroCtx.fill();
+
+          heroCtx.strokeStyle = 'rgba(245, 158, 11, 0.5)';
+          heroCtx.beginPath();
+          heroCtx.arc(p.px, p.py, 7, 0, Math.PI * 2);
+          heroCtx.stroke();
+        }
+      }
+
+      requestAnimationFrame(animateHero);
+    }
+    animateHero();
+
+    // ==========================================
+    // 3. ІНТЕРАКТИВНИЙ PIPELINE (5 ЕТАПІВ)
+    // ==========================================
+    const pipelineData = [
+      {
+        step: '01',
+        title: 'Скульптинг та 3D-сканування',
+        subtitle: 'Формування високополігональної анатомії',
+        desc: 'Робота починається зі сканування реального актора або цифрового скульптингу в ZBrush. Створюється модель із десятками мільйонів полігонів (High-Poly), де пропрацьовується кожна пора, шрам та асиметрія черепа.',
+        tools: ['ZBrush', 'RealityCapture', '3D Scan Store'],
+        metrics: [
+          { label: 'Кількість полігонів (High-Poly)', val: '25,000,000+' },
+          { label: 'Точність сканування', val: '50 мікрон' }
+        ]
+      },
+      {
+        step: '02',
+        title: 'Ретопологія та UV-розгортка',
+        subtitle: 'Оптимізація геометрії для ігрового рушія',
+        desc: '25 мільйонів полігонів неможливо анімувати в реальному часі. Художники будують чисту сітку з правильних чотирикутників (Quads), де ребра повторюють напрямок мімічних м’язів навколо очей та рота.',
+        tools: ['Maya', 'TopoGun', 'RizomUV'],
+        metrics: [
+          { label: 'Ігрова сітка (Low-Poly)', val: '85,000 – 140,000 tris' },
+          { label: 'Щільність текселів', val: '2048 px/m' }
+        ]
+      },
+      {
+        step: '03',
+        title: 'PBR-текстурування та Шейдери',
+        subtitle: 'Фізично коректні матеріали шкіри та очей',
+        desc: 'Деталі з High-Poly запікаються у карти нормалей (Normal Maps). Налаштовуються карти Albedo (колір без тіней), Roughness (жирний блиск Т-зони обличчя) та Subsurface Scattering для живого тепла шкіри.',
+        tools: ['Substance 3D Painter', 'Mari', 'Unreal Engine 5'],
+        metrics: [
+          { label: 'Роздільна здатність карт', val: '4K / 8K UDIM' },
+          { label: 'Шари матеріалу шкіри', val: 'Епідерміс + Дерма + Олія' }
+        ]
+      },
+      {
+        step: '04',
+        title: 'Ригінг та Скінінг (FACS)',
+        subtitle: 'Створення цифрового скелета та м’язів',
+        desc: 'У модель вбудовується ієрархія кісток і сотні блендшейпів (Blendshapes), заснованих на реальній анатомії людини. Система коригувальних форм запобігає провалюванню тканин під час складних емоцій.',
+        tools: ['Autodesk Maya', 'MetaHuman Creator', 'Ziva VFX'],
+        metrics: [
+          { label: 'Контролери обличчя', val: '240+ віртуальних м’язів' },
+          { label: 'Коригувальні форми', val: '800+ FACS Pose Assets' }
+        ]
+      },
+      {
+        step: '05',
+        title: 'Performance Capture та Симуляція',
+        subtitle: 'Перенесення живої акторської гри',
+        desc: 'Актор одягає костюм із маркерами та шоломну камеру. Система з частотою 120 кадрів/сек переносить рухи тіла, погляд і мікроміміку на персонажа, а рушій у реальному часі симулює фізику волосся й одягу.',
+        tools: ['Vicon Shogun', 'Live Link Face', 'Chaos Physics'],
+        metrics: [
+          { label: 'Частота захоплення', val: '120 – 240 FPS' },
+          { label: 'Латентність рендеру', val: '< 16.6 мс (60 FPS)' }
+        ]
+      }
+    ];
+
+    const tabsContainer = document.getElementById('pipeline-tabs');
+    const contentContainer = document.getElementById('pipeline-content');
+    let activePipelineIdx = 0;
+
+    function renderPipeline() {
+      tabsContainer.innerHTML = pipelineData.map((item, idx) => {
+        const isActive = idx === activePipelineIdx;
+        return `
+          <button onclick="selectPipeline(${idx})" class="text-left p-3.5 rounded-xl border transition-all ${
+            isActive
+              ? 'border-neonCyan bg-neonCyan/15 text-white shadow-[0_0_20px_rgba(0,240,255,0.15)]'
+              : 'border-white/10 bg-white/5 text-gray-400 hover:border-white/25 hover:text-gray-200'
+          }">
+            <div class="font-mono text-xs ${isActive ? 'text-neonCyan font-bold' : 'text-gray-500'}">КРОК ${item.step}</div>
+            <div class="font-display font-bold text-sm mt-1 leading-snug">${item.title}</div>
+          </button>
+        `;
+      }).join('');
+
+      const active = pipelineData[activePipelineIdx];
+      contentContainer.innerHTML = `
+        <div class="lg:col-span-7 space-y-4">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-neonCyan/10 border border-neonCyan/30 font-mono text-xs text-neonCyan">
+            STAGE ${active.step} // ${active.subtitle.toUpperCase()}
+          </div>
+          <h3 class="font-display text-2xl sm:text-3xl font-bold text-white">${active.title}</h3>
+          <p class="text-gray-300 text-base leading-relaxed">${active.desc}</p>
+          <div class="pt-2">
+            <div class="text-xs font-mono text-gray-400 mb-2">ІНДУСТРІАЛЬНИЙ СОФТ:</div>
+            <div class="flex flex-wrap gap-2">
+              ${active.tools.map(t => `<span class="px-3 py-1 rounded-lg bg-white/5 border border-white/10 font-mono text-xs text-neonPurple">${t}</span>`).join('')}
+            </div>
+          </div>
+        </div>
+
+        <div class="lg:col-span-5 space-y-3">
+          ${active.metrics.map(m => `
+            <div class="p-4 rounded-xl bg-obsidian/80 border border-white/10">
+              <div class="text-xs font-mono text-gray-400">${m.label}</div>
+              <div class="font-display text-xl font-bold text-neonCyan mt-1">${m.val}</div>
+            </div>
+          `).join('')}
+          <div class="p-4 rounded-xl bg-gradient-to-r from-neonCyan/10 to-neonPurple/10 border border-white/10 flex items-center justify-between">
+            <span class="text-xs font-mono text-gray-300">Прогрес виробництва</span>
+            <span class="font-mono text-sm font-bold text-white">${(activePipelineIdx + 1) * 20}%</span>
+          </div>
+        </div>
+      `;
+    }
+
+    window.selectPipeline = (idx) => {
+      activePipelineIdx = idx;
+      renderPipeline();
+    };
+    renderPipeline();
+
+    // ==========================================
+    // 4. ЛАБОРАТОРІЯ ШЕЙДЕРІВ (SHADER CANVAS)
+    // ==========================================
+    const shaderCanvas = document.getElementById('shader-canvas');
+    const shaderCtx = shaderCanvas.getContext('2d');
+    const lightAngleInput = document.getElementById('light-angle');
+    const poreDetailInput = document.getElementById('pore-detail');
+    const lightAngleVal = document.getElementById('light-angle-val');
+    const poreDetailVal = document.getElementById('pore-detail-val');
+    const activeShaderLabel = document.getElementById('active-shader-label');
+    const shaderBadge = document.getElementById('shader-badge');
+
+    let currentShaderMode = 'pbr';
+
+    const modeMeta = {
+      wireframe: { label: 'WIREFRAME TOPOLOGY', badge: 'Режим: Чиста геометрія полігональної сітки' },
+      clay: { label: 'CLAY SCULPT PASS', badge: 'Режим: Глиняний рендер без текстур (перевірка об’єму)' },
+      sss: { label: 'SUBSURFACE SCATTERING', badge: 'Режим: Підповерхневе розсіювання світла у шкірі' },
+      pbr: { label: 'FINAL PBR + RAY TRACING', badge: 'Режим: Фінальний рендер з порами, блиском і живими очима' }
+    };
+
+    document.querySelectorAll('.shader-mode-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.shader-mode-btn').forEach(b => {
+          b.classList.remove('active', 'border-neonCyan', 'bg-neonCyan/10');
+          b.classList.add('border-white/10', 'bg-white/5');
+        });
+        btn.classList.add('active', 'border-neonCyan', 'bg-neonCyan/10');
+        btn.classList.remove('border-white/10', 'bg-white/5');
+
+        currentShaderMode = btn.dataset.mode;
+        activeShaderLabel.textContent = modeMeta[currentShaderMode].label;
+        shaderBadge.textContent = modeMeta[currentShaderMode].badge;
+        drawShaderViewport();
+      });
+    });
+
+    lightAngleInput.addEventListener('input', () => {
+      lightAngleVal.textContent = `${lightAngleInput.value}°`;
+      drawShaderViewport();
+    });
+
+    poreDetailInput.addEventListener('input', () => {
+      poreDetailVal.textContent = `${poreDetailInput.value}%`;
+      drawShaderViewport();
+    });
+
+    function resizeShaderCanvas() {
+      const rect = shaderCanvas.parentElement.getBoundingClientRect();
+      shaderCanvas.width = rect.width * window.devicePixelRatio;
+      shaderCanvas.height = rect.height * window.devicePixelRatio;
+      shaderCtx.scale(window.devicePixelRatio, window.devicePixelRatio);
+      drawShaderViewport();
+    }
+    window.addEventListener('resize', resizeShaderCanvas);
+
+    // Процедурне малювання реалістичного портрета під різні режими шейдерів
+    function drawShaderViewport() {
+      const w = shaderCanvas.width / window.devicePixelRatio;
+      const h = shaderCanvas.height / window.devicePixelRatio;
+      const cx = w / 2;
+      const cy = h / 2;
+      const radius = Math.min(w, h) * 0.34;
+
+      const angleRad = (parseFloat(lightAngleInput.value) * Math.PI) / 180;
+      const poreIntensity = parseFloat(poreDetailInput.value) / 100;
+
+      // Позиція джерела світла
+      const lightX = cx + Math.sin(angleRad) * radius * 1.1;
+      const lightY = cy - radius * 0.45;
+
+      shaderCtx.clearRect(0, 0, w, h);
+
+      // Фон студії
+      const bgGrad = shaderCtx.createRadialGradient(lightX, lightY, 10, cx, cy, w * 0.75);
+      bgGrad.addColorStop(0, currentShaderMode === 'sss' ? '#241016' : '#161B26');
+      bgGrad.addColorStop(1, '#06070A');
+      shaderCtx.fillStyle = bgGrad;
+      shaderCtx.fillRect(0, 0, w, h);
+
+      // Індикатор напрямку світла
+      shaderCtx.strokeStyle = 'rgba(245, 158, 11, 0.35)';
+      shaderCtx.setLineDash([4, 4]);
+      shaderCtx.beginPath();
+      shaderCtx.moveTo(lightX, lightY);
+      shaderCtx.lineTo(cx, cy);
+      shaderCtx.stroke();
+      shaderCtx.setLineDash([]);
+
+      shaderCtx.fillStyle = '#F59E0B';
+      shaderCtx.beginPath();
+      shaderCtx.arc(lightX, lightY, 5, 0, Math.PI * 2);
+      shaderCtx.fill();
+
+      shaderCtx.save();
+
+      // Контур обличчя (Анатомічний овал)
+      function traceHeadPath() {
+        shaderCtx.beginPath();
+        shaderCtx.moveTo(cx, cy - radius * 1.12);
+        shaderCtx.bezierCurveTo(
+          cx + radius * 0.88, cy - radius * 1.12,
+          cx + radius * 0.85, cy + radius * 0.25,
+          cx + radius * 0.48, cy + radius * 0.82
+        );
+        shaderCtx.quadraticCurveTo(cx, cy + radius * 1.18, cx - radius * 0.48, cy + radius * 0.82);
+        shaderCtx.bezierCurveTo(
+          cx - radius * 0.85, cy + radius * 0.25,
+          cx - radius * 0.88, cy - radius * 1.12,
+          cx, cy - radius * 1.12
+        );
+        shaderCtx.closePath();
+      }
+
+      // 1. РЕЖИМ WIREFRAME
+      if (currentShaderMode === 'wireframe') {
+        traceHeadPath();
+        shaderCtx.strokeStyle = '#00F0FF';
+        shaderCtx.lineWidth = 1.5;
+        shaderCtx.stroke();
+
+        // Сітка квадів усередині голови
+        shaderCtx.clip();
+        const step = radius * 0.16;
+        shaderCtx.strokeStyle = 'rgba(0, 240, 255, 0.32)';
+        shaderCtx.lineWidth = 0.9;
+
+        for (let y = cy - radius * 1.2; y <= cy + radius * 1.2; y += step) {
+          shaderCtx.beginPath();
+          for (let x = cx - radius; x <= cx + radius; x += 8) {
+            const dx = (x - cx) / radius;
+            const dy = (y - cy) / radius;
+            const curve = Math.cos(dx * 1.4) * 12 * dy;
+            if (x === cx - radius) shaderCtx.moveTo(x, y + curve);
+            else shaderCtx.lineTo(x, y + curve);
+          }
+          shaderCtx.stroke();
+        }
+
+        for (let x = cx - radius; x <= cx + radius; x += step) {
+          shaderCtx.beginPath();
+          for (let y = cy - radius * 1.2; y <= cy + radius * 1.2; y += 8) {
+            const dx = (x - cx) / radius;
+            const dy = (y - cy) / radius;
+            const pinch = dx * (dy > 0 ? dy * 28 : 0);
+            if (y === cy - radius * 1.2) shaderCtx.moveTo(x - pinch, y);
+            else shaderCtx.lineTo(x - pinch, y);
+          }
+          shaderCtx.stroke();
+        }
+
+        // Контури очей, носа, губ у вигляді сітки
+        shaderCtx.strokeStyle = '#8B5CF6';
+        shaderCtx.lineWidth = 1.4;
+        // Очі
+        [-0.34, 0.34].forEach(side => {
+          shaderCtx.beginPath();
+          shaderCtx.ellipse(cx + radius * side, cy - radius * 0.14, radius * 0.16, radius * 0.08, 0, 0, Math.PI * 2);
+          shaderCtx.stroke();
+        });
+        // Ніс
+        shaderCtx.beginPath();
+        shaderCtx.moveTo(cx, cy - radius * 0.15);
+        shaderCtx.lineTo(cx - radius * 0.11, cy + radius * 0.22);
+        shaderCtx.lineTo(cx, cy + radius * 0.26);
+        shaderCtx.lineTo(cx + radius * 0.11, cy + radius * 0.22);
+        shaderCtx.closePath();
+        shaderCtx.stroke();
+        // Губи
+        shaderCtx.beginPath();
+        shaderCtx.ellipse(cx, cy + radius * 0.54, radius * 0.24, radius * 0.08, 0, 0, Math.PI * 2);
+        shaderCtx.stroke();
+
+        shaderCtx.restore();
+        return;
+      }
+
+      // 2-4. РЕЖИМИ CLAY, SSS, PBR
+      // Вуха з підповерхневим розсіюванням (червонуватий відблиск на просвіт)
+      [-0.82, 0.82].forEach(side => {
+        const earX = cx + radius * side;
+        const earY = cy + radius * 0.02;
+        const earGrad = shaderCtx.createRadialGradient(earX, earY, 2, earX, earY, radius * 0.22);
+        if (currentShaderMode === 'clay') {
+          earGrad.addColorStop(0, '#9CA3AF');
+          earGrad.addColorStop(1, '#4B5563');
+        } else if (currentShaderMode === 'sss') {
+          earGrad.addColorStop(0, '#FF4D4D');
+          earGrad.addColorStop(1, '#7F1D1D');
+        } else {
+          earGrad.addColorStop(0, '#E87A64');
+          earGrad.addColorStop(1, '#8C4A3C');
+        }
+        shaderCtx.fillStyle = earGrad;
+        shaderCtx.beginPath();
+        shaderCtx.ellipse(earX, earY, radius * 0.11, radius * 0.24, side * 0.1, 0, Math.PI * 2);
+        shaderCtx.fill();
+      });
+
+      // Основне заповнення обличчя
+      traceHeadPath();
+      const faceGrad = shaderCtx.createRadialGradient(
+        lightX, lightY, radius * 0.1,
+        cx, cy, radius * 1.35
+      );
+
+      if (currentShaderMode === 'clay') {
+        faceGrad.addColorStop(0, '#D1D5DB');
+        faceGrad.addColorStop(0.55, '#6B7280');
+        faceGrad.addColorStop(1, '#1F2937');
+      } else if (currentShaderMode === 'sss') {
+        faceGrad.addColorStop(0, '#FF9E80');
+        faceGrad.addColorStop(0.45, '#E11D48');
+        faceGrad.addColorStop(0.85, '#881337');
+        faceGrad.addColorStop(1, '#2E0714');
+      } else {
+        // PBR шкіра
+        faceGrad.addColorStop(0, '#F7C8B0');
+        faceGrad.addColorStop(0.45, '#C98268');
+        faceGrad.addColorStop(0.82, '#733D2E');
+        faceGrad.addColorStop(1, '#26120E');
+      }
+
+      shaderCtx.fillStyle = faceGrad;
+      shaderCtx.fill();
+      shaderCtx.clip();
+
+      // Додавання SSS-тепла на щоки та ніс для PBR і SSS
+      if (currentShaderMode === 'sss' || currentShaderMode === 'pbr') {
+        const sssAlpha = currentShaderMode === 'sss' ? 0.55 : 0.22;
+        const cheekGrad = shaderCtx.createRadialGradient(cx, cy + radius * 0.18, 5, cx, cy + radius * 0.18, radius * 0.65);
+        cheekGrad.addColorStop(0, `rgba(255, 65, 54, ${sssAlpha})`);
+        cheekGrad.addColorStop(1, 'rgba(255, 65, 54, 0)');
+        shaderCtx.fillStyle = cheekGrad;
+        shaderCtx.fillRect(cx - radius, cy - radius, radius * 2, radius * 2.4);
+      }
+
+      // Мікрорельєф пор шкіри (Normal Map текстура)
+      if (poreIntensity > 0.05 && currentShaderMode !== 'sss') {
+        const dotsCount = Math.floor(poreIntensity * 900);
+        shaderCtx.fillStyle = currentShaderMode === 'clay'
+          ? 'rgba(17, 24, 39, 0.18)'
+          : 'rgba(60, 20, 12, 0.16)';
+        for (let i = 0; i < dotsCount; i++) {
+          // Детермінований псевдовипадковий розподіл пор
+          const px = cx + Math.sin(i * 12.9898) * radius * 0.72;
+          const py = cy + Math.cos(i * 78.233) * radius * 0.85;
+          shaderCtx.fillRect(px, py, 1.3, 1.3);
+        }
+      }
+
+      // Очі (Білкова оболонка, райдужка, зіниця, вологий відблиск рогівки)
+      [-0.33, 0.33].forEach(side => {
+        const eyeX = cx + radius * side;
+        const eyeY = cy - radius * 0.14;
+
+        // Тінь очної западини
+        const socketGrad = shaderCtx.createRadialGradient(eyeX, eyeY, 4, eyeX, eyeY, radius * 0.24);
+        socketGrad.addColorStop(0, 'rgba(0,0,0,0.45)');
+        socketGrad.addColorStop(1, 'rgba(0,0,0,0)');
+        shaderCtx.fillStyle = socketGrad;
+        shaderCtx.beginPath();
+        shaderCtx.arc(eyeX, eyeY, radius * 0.24, 0, Math.PI * 2);
+        shaderCtx.fill();
+
+        // Очне яблуко
+        shaderCtx.fillStyle = currentShaderMode === 'clay' ? '#9CA3AF' : (currentShaderMode === 'sss' ? '#FDA4AF' : '#E5E7EB');
+        shaderCtx.beginPath();
+        shaderCtx.ellipse(eyeX, eyeY, radius * 0.15, radius * 0.075, 0, 0, Math.PI * 2);
+        shaderCtx.fill();
+
+        if (currentShaderMode === 'pbr') {
+          // Райдужка
+          const irisOffset = Math.sin(angleRad) * 3;
+          shaderCtx.fillStyle = '#0EA5E9';
+          shaderCtx.beginPath();
+          shaderCtx.arc(eyeX + irisOffset, eyeY, radius * 0.062, 0, Math.PI * 2);
+          shaderCtx.fill();
+
+          // Зіниця
+          shaderCtx.fillStyle = '#050608';
+          shaderCtx.beginPath();
+          shaderCtx.arc(eyeX + irisOffset, eyeY, radius * 0.03, 0, Math.PI * 2);
+          shaderCtx.fill();
+
+          // Спекулярний відблиск рогівки (оживляє погляд!)
+          shaderCtx.fillStyle = '#FFFFFF';
+          shaderCtx.beginPath();
+          shaderCtx.arc(eyeX + irisOffset + Math.sin(angleRad) * 3 + 2, eyeY - 3, 2.5, 0, Math.PI * 2);
+          shaderCtx.fill();
+        }
+      });
+
+      // Тінь та відблиск носа
+      const noseShadowShift = -Math.sin(angleRad) * 14;
+      const noseGrad = shaderCtx.createLinearGradient(cx - 18 + noseShadowShift, cy, cx + 18 + noseShadowShift, cy);
+      noseGrad.addColorStop(0, 'rgba(0,0,0,0.35)');
+      noseGrad.addColorStop(0.5, 'rgba(255,255,255,0.22)');
+      noseGrad.addColorStop(1, 'rgba(0,0,0,0.35)');
+      shaderCtx.fillStyle = noseGrad;
+      shaderCtx.beginPath();
+      shaderCtx.moveTo(cx, cy - radius * 0.14);
+      shaderCtx.lineTo(cx - radius * 0.12, cy + radius * 0.24);
+      shaderCtx.lineTo(cx + radius * 0.12, cy + radius * 0.24);
+      shaderCtx.closePath();
+      shaderCtx.fill();
+
+      // Губи
+      const lipColor = currentShaderMode === 'clay' ? '#6B7280' : (currentShaderMode === 'sss' ? '#F43F5E' : '#9E4747');
+      shaderCtx.fillStyle = lipColor;
+      shaderCtx.beginPath();
+      shaderCtx.ellipse(cx, cy + radius * 0.54, radius * 0.23, radius * 0.075, 0, 0, Math.PI * 2);
+      shaderCtx.fill();
+
+      // Вологий блиск на нижній губі в PBR
+      if (currentShaderMode === 'pbr') {
+        shaderCtx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+        shaderCtx.beginPath();
+        shaderCtx.ellipse(cx + Math.sin(angleRad) * 8, cy + radius * 0.56, radius * 0.09, radius * 0.02, 0, 0, Math.PI * 2);
+        shaderCtx.fill();
+      }
+
+      shaderCtx.restore();
+    }
+    setTimeout(resizeShaderCanvas, 50);
+
+    // ==========================================
+    // 5. ПОРІВНЯННЯ ЕПОХ ГРАФІКИ (2004 / 2015 / 2026)
+    // ==========================================
+    const eraData = {
+      '2004': {
+        badge: '2004 // ~3,500 TRIS',
+        title: 'Епоха DirectX 9 та низькополігональних моделей',
+        desc: 'Персонажі складалися з кількох тисяч трикутників. Очі та волосся малювалися прямо на низькоякісних текстурах, пальці рук часто були злитими, а міміка обмежувалася кількома базовими рухами щелепи.',
+        specs: [
+          { k: 'Полігони на персонажа', v: '3,000 – 5,000 tris' },
+          { k: 'Роздільна здатність текстур', v: '512 × 512 px' },
+          { k: 'Освітлення шкіри', v: 'Просте затінення по Фонгу (без SSS)' },
+          { k: 'Волосся', v: 'Монолітний шолом із текстурою' }
+        ],
+        gridStep: 36,
+        smoothness: 0.15
+      },
+      '2015': {
+        badge: '2015 // ~45,000 TRIS',
+        title: 'Епоха PBR-матеріалів та оптичного MoCap',
+        desc: 'Впровадження фізично коректного рендерингу (PBR) та перших систем підповерхневого розсіювання дозволило передати фактуру шкіри, металу та тканини. Волосся почали збирати з десятків напівпрозорих полігональних стрічок.',
+        specs: [
+          { k: 'Полігони на персонажа', v: '40,000 – 65,000 tris' },
+          { k: 'Роздільна здатність текстур', v: '2048 × 2048 px (Normal + Specular)' },
+          { k: 'Освітлення шкіри', v: 'Screen-Space Subsurface Scattering' },
+          { k: 'Волосся', v: 'Alpha-картки (Hair Cards)' }
+        ],
+        gridStep: 16,
+        smoothness: 0.55
+      },
+      '2026': {
+        badge: '2026 // 150,000+ TRIS (NANITE)',
+        title: 'Епоха Path Tracing, 4D-сканування та Groom',
+        desc: 'Межа між кіно та грою зникла. Віртуальна геометрія дозволяє рендерити мільйони мікродеталей без втрати FPS, кожна волосина симулюється фізично, а трасування променів у реальному часі розраховує відблиски у вологих очах.',
+        specs: [
+          { k: 'Полігони на персонажа', v: '150,000+ tris (мікрополігони)' },
+          { k: 'Роздільна здатність текстур', v: '8K UDIM + динамічні карти зморшок' },
+          { k: 'Освітлення шкіри', v: 'Path-Traced Random Walk SSS' },
+          { k: 'Волосся', v: '100,000+ окремих фізичних пасм (Strands)' }
+        ],
+        gridStep: 6,
+        smoothness: 1.0
+      }
+    };
+
+    const eraCanvas = document.getElementById('era-canvas');
+    const eraCtx = eraCanvas.getContext('2d');
+    const eraDetails = document.getElementById('era-details');
+    const eraBadge = document.getElementById('era-badge');
+    let activeEra = '2026';
+
+    function renderEra(year) {
+      activeEra = year;
+      const info = eraData[year];
+      eraBadge.textContent = info.badge;
+
+      eraDetails.innerHTML = `
+        <h3 class="font-display text-2xl sm:text-3xl font-bold text-white">${info.title}</h3>
+        <p class="text-gray-300 text-base leading-relaxed">${info.desc}</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-2">
+          ${info.specs.map(s => `
+            <div class="p-4 rounded-xl bg-obsidian/75 border border-white/10">
+              <div class="text-xs font-mono text-gray-400">${s.k}</div>
+              <div class="font-display font-bold text-sm sm:text-base text-neonCyan mt-1">${s.v}</div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+
+      // Візуалізація густини сітки та деталізації на eraCanvas
+      const rect = eraCanvas.parentElement.getBoundingClientRect();
+      eraCanvas.width = rect.width * window.devicePixelRatio;
+      eraCanvas.height = rect.height * window.devicePixelRatio;
+      eraCtx.scale(window.devicePixelRatio, window.devicePixelRatio);
+
+      const w = rect.width;
+      const h = rect.height;
+      const cx = w / 2;
+      const cy = h / 2;
+      const r = Math.min(w, h) * 0.34;
+
+      eraCtx.clearRect(0, 0, w, h);
+
+      // Сфера-голова із різною кількістю граней (Low-poly vs High-poly)
+      const segments = year === '2004' ? 8 : (year === '2015' ? 18 : 48);
+      const rings = year === '2004' ? 6 : (year === '2015' ? 14 : 36);
+
+      for (let i = 0; i < rings; i++) {
+        const phi1 = (i / rings) * Math.PI;
+        const phi2 = ((i + 1) / rings) * Math.PI;
+
+        for (let j = 0; j < segments; j++) {
+          const theta1 = (j / segments) * Math.PI * 2;
+          const theta2 = ((j + 1) / segments) * Math.PI * 2;
+
+          // Проєкція передньої півсфери
+          if (Math.sin(theta1) < -0.1 && Math.sin(theta2) < -0.1) continue;
+
+          const p1 = { x: cx + r * 0.85 * Math.sin(phi1) * Math.cos(theta1), y: cy - r * 1.08 * Math.cos(phi1) };
+          const p2 = { x: cx + r * 0.85 * Math.sin(phi1) * Math.cos(theta2), y: cy - r * 1.08 * Math.cos(phi1) };
+          const p3 = { x: cx + r * 0.85 * Math.sin(phi2) * Math.cos(theta2), y: cy - r * 1.08 * Math.cos(phi2) };
+          const p4 = { x: cx + r * 0.85 * Math.sin(phi2) * Math.cos(theta1), y: cy - r * 1.08 * Math.cos(phi2) };
+
+          // Освітлення грані
+          const lightDot = Math.max(0.12, Math.sin(phi1) * Math.sin(theta1) * 0.8 + 0.3);
+          const hue = year === '2004' ? 210 : (year === '2015' ? 250 : 185);
+          const sat = year === '2004' ? '25%' : '65%';
+          const lum = Math.floor(lightDot * (year === '2026' ? 52 : 42));
+
+          eraCtx.fillStyle = `hsl(${hue}, ${sat}, ${lum}%)`;
+          eraCtx.beginPath();
+          eraCtx.moveTo(p1.x, p1.y);
+          eraCtx.lineTo(p2.x, p2.y);
+          eraCtx.lineTo(p3.x, p3.y);
+          eraCtx.lineTo(p4.x, p4.y);
+          eraCtx.closePath();
+          eraCtx.fill();
+
+          if (year !== '2026') {
+            eraCtx.strokeStyle = year === '2004' ? 'rgba(0, 240, 255, 0.5)' : 'rgba(139, 92, 246, 0.25)';
+            eraCtx.lineWidth = year === '2004' ? 1.2 : 0.6;
+            eraCtx.stroke();
+          }
+        }
+      }
+
+      // Для 2026 додаємо ефект мікроволокон та світлового ореолу
+      if (year === '2026') {
+        const glow = eraCtx.createRadialGradient(cx, cy, r * 0.7, cx, cy, r * 1.25);
+        glow.addColorStop(0, 'rgba(0, 240, 255, 0)');
+        glow.addColorStop(1, 'rgba(0, 240, 255, 0.25)');
+        eraCtx.fillStyle = glow;
+        eraCtx.beginPath();
+        eraCtx.arc(cx, cy, r * 1.25, 0, Math.PI * 2);
+        eraCtx.fill();
+      }
+    }
+
+    document.querySelectorAll('.era-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.era-btn').forEach(b => {
+          b.classList.remove('active', 'border-neonCyan', 'bg-neonCyan/15', 'text-neonCyan');
+          b.classList.add('border-white/15', 'bg-white/5', 'text-gray-300');
+        });
+        btn.classList.add('active', 'border-neonCyan', 'bg-neonCyan/15', 'text-neonCyan');
+        btn.classList.remove('border-white/15', 'bg-white/5', 'text-gray-300');
+        renderEra(btn.dataset.era);
+      });
+    });
+    setTimeout(() => renderEra('2026'), 80);
+
+    // ==========================================
+    // 6. ІНТЕРАКТИВНИЙ ГРАФІК «МОТОРОШНА ДОЛИНА»
+    // ==========================================
+    const valleyInfo = [
+      {
+        title: 'Стилізовані персонажі (20–40% реалізму)',
+        desc: 'Мозок одразу сприймає персонажа як умовний художній образ. Завищених очікувань немає, тому навіть проста анімація виглядає органічно.'
+      },
+      {
+        title: 'Висока стилізація (Pixar, Overwatch, Fortnite)',
+        desc: 'Пік комфорту перед долиною: гіперболізовані очі та виразна міміка зчитуються миттєво, але персонаж не претендує на фотографічну копію людини.'
+      },
+      {
+        title: 'Дно «Моторошної долини» (80–90% реалізму)',
+        desc: 'Найнебезпечніша зона: шкіра виглядає майже справжньою, але нерухомі повіки, восковий блиск або несинхронна артикуляція викликають підсвідомий дискомфорт.'
+      },
+      {
+        title: 'Next-Gen AAA (Hellblade II, Death Stranding 2)',
+        desc: 'Повне подолання моторошної долини завдяки 4D-скануванню акторів, фізиці вологих очей, мікросакадам зіниць та мікроанімаціям пор шкіри.'
+      }
+    ];
+
+    const valleyTitleEl = document.getElementById('valley-point-title');
+    const valleyDescEl = document.getElementById('valley-description');
+
+    document.querySelectorAll('.valley-node').forEach(node => {
+      node.addEventListener('click', () => {
+        const idx = parseInt(node.dataset.idx, 10);
+        const item = valleyInfo[idx];
+        valleyTitleEl.textContent = item.title;
+        valleyDescEl.innerHTML = `<strong class="text-neonCyan">${item.title}:</strong> ${item.desc}`;
+      });
+    });
+
+    // ==========================================
+    // 7. МІНІ-ВІКТОРИНА У ПІДВАЛІ
+    // ==========================================
+    const quizFeedback = document.getElementById('quiz-feedback');
+    document.querySelectorAll('.quiz-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const isCorrect = btn.dataset.correct === 'true';
+        document.querySelectorAll('.quiz-btn').forEach(b => {
+          b.classList.remove('border-emerald-400', 'bg-emerald-500/20', 'text-emerald-300', 'border-red-400', 'bg-red-500/20', 'text-red-300');
+        });
+
+        quizFeedback.classList.remove('hidden');
+        if (isCorrect) {
+          btn.classList.add('border-emerald-400', 'bg-emerald-500/20', 'text-emerald-300');
+          quizFeedback.className = 'mt-4 text-sm font-medium text-emerald-400';
+          quizFeedback.textContent = '✓ Точно! Subsurface Scattering (SSS) імітує розсіювання фотонів у глибоких шарах шкіри, надаючи їй живого тепла.';
+        } else {
+          btn.classList.add('border-red-400', 'bg-red-500/20', 'text-red-300');
+          quizFeedback.className = 'mt-4 text-sm font-medium text-red-400';
+          quizFeedback.textContent = '✕ Не зовсім. Спробуйте інший варіант — правильна технологія відповідає за підповерхневе розсіювання світла.';
+        }
+      });
+    });
+  </script>
+</body>
+</html>
